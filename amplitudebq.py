@@ -119,7 +119,8 @@ def process_line_json(line):
         data['event_time'] = value_def(parsed['event_time'])
         data['platform'] = value_def(parsed['platform'])
         data['is_attribution_event'] = value_def(parsed['is_attribution_event'])
-        data['os_version'] = value_def(parsed['os_version'])
+        data['os_version'] = value_def(parsed['os_version']) if value_def(parsed['os_version']) is None\
+            else str(value_def(parsed['os_version']))
         data['paying'] = value_paying(parsed['paying'])
         data['amplitude_id'] = value_def(parsed['amplitude_id'])
         data['device_type'] = value_def(parsed['device_type'])
