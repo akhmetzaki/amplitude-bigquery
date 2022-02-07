@@ -160,7 +160,7 @@ def process_line_json(line):
 ###############################################################################
 # Initiate Google BigQuery
 bigquery_client = bigquery.Client(project=PROJECT_ID, credentials=credentials)
-
+dataset_ref = bigquery_client.get_dataset('zimranamplitude.amplitude')
 # Initiate Google Cloud Storage
 storage_client = storage.Client(credentials=credentials)
 
@@ -172,10 +172,9 @@ def main(YESTERDAY=(datetime.utcnow().date() - timedelta(days=2)).strftime("%Y%m
               + YESTERDAY + "T23'  >> amplitude.zip")
 
     # Unzip the file
-    unzip_file('amplitude_bq/amplitude.zip', 'amplitude')
+    unzip_file('./amplitude.zip', 'amplitude')
 
-
-    upload_file_to_gcs('amplitude_bq/amplitude.zip', YESTERDAY + '.zip', 'export')
+    upload_file_to_gcs('./amplitude.zip', YESTERDAY + '.zip', 'export')
 
     # Loop through all new files, unzip them & remove the .gz
     for file in file_list('.gz'):
@@ -207,7 +206,6 @@ def main(YESTERDAY=(datetime.utcnow().date() - timedelta(days=2)).strftime("%Y%m
                            "properties_" + file_json(file), 'import')
 
         # Import data from Google Cloud Storage into Google BigQuery
-        dataset_ref = bigquery_client.get_dataset('zimranamplitude.amplitude')
         load_into_bigquery(file, 'events$' + YESTERDAY)
         load_into_bigquery("properties_" + file, 'events_properties')
 
@@ -219,7 +217,7 @@ def main(YESTERDAY=(datetime.utcnow().date() - timedelta(days=2)).strftime("%Y%m
         remove_file("properties_" + file_json(file), "amplitude/{id}")
 
     # Remove the original zipfile
-    remove_file("amplitude_bq/amplitude.zip")
+    remove_file("./amplitude.zip")
 
 
 if __name__ == '__main__':

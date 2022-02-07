@@ -1,7 +1,7 @@
 from amplitudebq import main
 from datetime import datetime, timedelta
 
-START_DATE = datetime.strptime('20211020', '%Y%m%d')
+START_DATE = datetime.strptime('20211024', '%Y%m%d')
 END_DATE = (datetime.utcnow().date() - timedelta(days=1)).strftime('%Y%m%d')
 
 
