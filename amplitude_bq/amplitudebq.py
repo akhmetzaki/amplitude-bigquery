@@ -6,17 +6,22 @@ import zipfile
 
 from datetime import datetime, timedelta
 from google.cloud import bigquery, storage
+from google.oauth2 import service_account
+
 from os import walk
 
-ACCOUNT_ID = ''
-API_KEY = ''
-API_SECRET = ''
-PROJECT_ID = ''
-CLOUD_STORAGE_BUCKET = ''
+ACCOUNT_ID = '349591'
+API_KEY = 'a278864d556a0a7aba020ac26f2155b4'
+API_SECRET = '12c2a1e342e8141f8cca0e7a32301334'
+PROJECT_ID = 'zimranamplitude'
+CLOUD_STORAGE_BUCKET = 'zimran-amplitude'
 PROPERTIES = ["event_properties", "data", "groups", "group_properties",
               "user_properties"]
 
-YESTERDAY = (datetime.utcnow().date() - timedelta(days=2)).strftime("%Y%m%d")
+credentials = service_account.Credentials.from_service_account_file(
+    '../service_account.json'
+)
+
 PATH = "amplitude/{id}/".format(id=ACCOUNT_ID)
 
 
@@ -49,7 +54,7 @@ def unzip_gzip(filename, remove_original=True):
     file_content = f.read()
     f.close()
 
-    with open(file_json(filename), 'w') as unzipped_file:
+    with open(file_json(filename), 'wb') as unzipped_file:
         unzipped_file.write(file_content)
 
     if remove_original:
@@ -141,7 +146,7 @@ def process_line_json(line):
 
         # Loop through DICTs and save all properties
         for property_value in PROPERTIES:
-            for key, value in parsed[property_value].iteritems():
+            for key, value in parsed[property_value].items():
                 value = 'True' if value is True else value
                 value = 'False' if value is False else value
                 properties.append({'property_type': property_value,
@@ -153,62 +158,69 @@ def process_line_json(line):
 
 
 ###############################################################################
-
-# Perform a CURL request to download the export from Amplitude
-os.system("curl -u " + API_KEY + ":" + API_SECRET + " \
-          'https://amplitude.com/api/2/export?start=" + YESTERDAY + "T00&end="
-          + YESTERDAY + "T23'  >> amplitude.zip")
-
-# Unzip the file
-unzip_file('amplitude.zip', 'amplitude')
-
 # Initiate Google BigQuery
-bigquery_client = bigquery.Client(project=PROJECT_ID)
+bigquery_client = bigquery.Client(project=PROJECT_ID, credentials=credentials)
 
 # Initiate Google Cloud Storage
-storage_client = storage.Client()
-upload_file_to_gcs('amplitude.zip', YESTERDAY + '.zip', 'export')
+storage_client = storage.Client(credentials=credentials)
 
-# Loop through all new files, unzip them & remove the .gz
-for file in file_list('.gz'):
-    print("Parsing file: {name}".format(name=file))
-    unzip_gzip(PATH + file)
 
-    with open(PATH + file_json(file)) as f:
-        lines = f.readlines()
-    lines = [x.strip() for x in lines if x]
+def main(YESTERDAY=(datetime.utcnow().date() - timedelta(days=2)).strftime("%Y%m%d")):
+    # Perform a CURL request to download the export from Amplitude
+    os.system("curl -u " + API_KEY + ":" + API_SECRET + " \
+              'https://amplitude.com/api/2/export?start=" + YESTERDAY + "T00&end="
+              + YESTERDAY + "T23'  >> amplitude.zip")
 
-    # Create a new JSON import file
-    import_events_file = open("amplitude/import/" + file_json(file), "w+")
-    import_properties_file = open("amplitude/import/" + "properties_" +
-                                  file_json(file), "w+")
+    # Unzip the file
+    unzip_file('amplitude.zip', 'amplitude')
 
-    # Loop through the JSON lines
-    for line in lines:
-        events_line, properties_lines = process_line_json(line)
-        import_events_file.write(events_line + "\r\n")
-        for property_line in properties_lines:
-            import_properties_file.write(json.dumps(property_line) + "\r\n")
 
-    # Close the file and upload it for import to Google Cloud Storage
-    import_events_file.close()
-    import_properties_file.close()
-    upload_file_to_gcs("amplitude/import/" + file_json(file), file_json(file),
-                       'import')
-    upload_file_to_gcs("amplitude/import/" + "properties_" + file_json(file),
-                       "properties_" + file_json(file), 'import')
+    upload_file_to_gcs('amplitude.zip', YESTERDAY + '.zip', 'export')
 
-    # Import data from Google Cloud Storage into Google BigQuery
-    dataset_ref = bigquery_client.dataset('amplitude')
-    load_into_bigquery(file, 'events$' + YESTERDAY)
-    load_into_bigquery("properties_" + file, 'events_properties')
+    # Loop through all new files, unzip them & remove the .gz
+    for file in file_list('.gz'):
+        print("Parsing file: {name}".format(name=file))
+        unzip_gzip(PATH + file)
 
-    print("Imported: {file}".format(file=file_json(file)))
+        with open(PATH + file_json(file)) as f:
+            lines = f.readlines()
+        lines = [x.strip() for x in lines if x]
 
-    # Remove JSON file
-    remove_file(file_json(file), "amplitude/{id}".format(id=ACCOUNT_ID))
-    remove_file(file_json(file), "amplitude/import")
-    remove_file("properties_" + file_json(file), "amplitude/import")
+        # Create a new JSON import file
+        import_events_file = open("amplitude/{id}".format(id=ACCOUNT_ID) + '/' + file_json(file), "w+")
+        import_properties_file = open("amplitude/{id}".format(id=ACCOUNT_ID) + '/' + "properties_" +
+                                      file_json(file), "w+")
 
-# Remove the original zipfile
-remove_file("amplitude.zip")
+        # Loop through the JSON lines
+        for line in lines:
+            events_line, properties_lines = process_line_json(line)
+            import_events_file.write(events_line + "\r\n")
+            for property_line in properties_lines:
+                import_properties_file.write(json.dumps(property_line) + "\r\n")
+
+        # Close the file and upload it for import to Google Cloud Storage
+        import_events_file.close()
+        import_properties_file.close()
+        upload_file_to_gcs("amplitude/{id}/".format(id=ACCOUNT_ID) + file_json(file), file_json(file),
+                           'import')
+        upload_file_to_gcs("amplitude/{id}/".format(id=ACCOUNT_ID) + "properties_" + file_json(file),
+                           "properties_" + file_json(file), 'import')
+
+        # Import data from Google Cloud Storage into Google BigQuery
+        dataset_ref = bigquery_client.get_dataset('zimranamplitude.amplitude')
+        load_into_bigquery(file, 'events$' + YESTERDAY)
+        load_into_bigquery("properties_" + file, 'events_properties')
+
+        print("Imported: {file}".format(file=file_json(file)))
+
+        # Remove JSON file
+        remove_file(file_json(file), "amplitude/{id}".format(id=ACCOUNT_ID))
+        # remove_file(file_json(file), "amplitude/import")
+        remove_file("properties_" + file_json(file), "amplitude/{id}")
+
+    # Remove the original zipfile
+    remove_file("amplitude.zip")
+
+
+if __name__ == '__main__':
+    main()

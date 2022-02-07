@@ -1,0 +1,5 @@
+mode,name,type
+NULLABLE,property_type,STRING
+NULLABLE,insert_id,STRING
+NULLABLE,key,STRING
+NULLABLE,value,STRING
