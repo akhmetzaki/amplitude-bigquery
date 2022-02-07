@@ -214,7 +214,7 @@ def main(YESTERDAY=(datetime.utcnow().date() - timedelta(days=2)).strftime("%Y%m
         # Remove JSON file
         remove_file(file_json(file), "amplitude/{id}".format(id=ACCOUNT_ID))
         # remove_file(file_json(file), "amplitude/import")
-        remove_file("properties_" + file_json(file), "amplitude/{id}")
+        remove_file("properties_" + file_json(file), "amplitude/{id}".format(id=ACCOUNT_ID))
 
     # Remove the original zipfile
     remove_file("./amplitude.zip")
