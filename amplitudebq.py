@@ -19,7 +19,7 @@ PROPERTIES = ["event_properties", "data", "groups", "group_properties",
               "user_properties"]
 
 credentials = service_account.Credentials.from_service_account_file(
-    '../service_account.json'
+    'service_account.json'
 )
 
 PATH = "amplitude/{id}/".format(id=ACCOUNT_ID)
@@ -172,10 +172,10 @@ def main(YESTERDAY=(datetime.utcnow().date() - timedelta(days=2)).strftime("%Y%m
               + YESTERDAY + "T23'  >> amplitude.zip")
 
     # Unzip the file
-    unzip_file('amplitude.zip', 'amplitude')
+    unzip_file('amplitude_bq/amplitude.zip', 'amplitude')
 
 
-    upload_file_to_gcs('amplitude.zip', YESTERDAY + '.zip', 'export')
+    upload_file_to_gcs('amplitude_bq/amplitude.zip', YESTERDAY + '.zip', 'export')
 
     # Loop through all new files, unzip them & remove the .gz
     for file in file_list('.gz'):
@@ -219,7 +219,7 @@ def main(YESTERDAY=(datetime.utcnow().date() - timedelta(days=2)).strftime("%Y%m
         remove_file("properties_" + file_json(file), "amplitude/{id}")
 
     # Remove the original zipfile
-    remove_file("amplitude.zip")
+    remove_file("amplitude_bq/amplitude.zip")
 
 
 if __name__ == '__main__':

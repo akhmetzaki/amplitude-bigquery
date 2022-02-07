@@ -1,4 +1,4 @@
-from .amplitudebq import main
+from amplitudebq import main
 from datetime import datetime, timedelta
 
 START_DATE = datetime.strptime('20211020', '%Y%m%d')
