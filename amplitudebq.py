@@ -7,6 +7,7 @@ import zipfile
 from datetime import datetime, timedelta
 from google.cloud import bigquery, storage
 from google.oauth2 import service_account
+from google.api_core.exceptions import BadRequest
 
 from os import walk
 
@@ -91,10 +92,12 @@ def load_into_bigquery(file, table):
     job = bigquery_client.load_table_from_uri(import_json_url(file_json(file)),
                                               dataset_ref.table(table),
                                               job_config=job_config)
-    print(job.result())
+    try:
+        job.result()
+    except BadRequest as e:
+        print(e.errors)
     assert job.job_type == 'load'
     assert job.state == 'DONE'
-    print(job.errors())
 
 
 def process_line_json(line):
