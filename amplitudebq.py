@@ -96,7 +96,7 @@ def load_into_bigquery(file, table):
         job.result()
     except BadRequest as e:
         try:
-            print(job.errors())
+            print([x['message'] for x in job.errors])
         except:
             print('errors are inaccessible')
         print(e.errors)
