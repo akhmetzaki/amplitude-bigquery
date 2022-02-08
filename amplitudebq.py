@@ -91,9 +91,10 @@ def load_into_bigquery(file, table):
     job = bigquery_client.load_table_from_uri(import_json_url(file_json(file)),
                                               dataset_ref.table(table),
                                               job_config=job_config)
-    print(job.errors())
     print(job.result())
     assert job.job_type == 'load'
+    if job.state != 'DONE':
+        print(job.errors())
     assert job.state == 'DONE'
 
 
