@@ -100,6 +100,14 @@ def load_into_bigquery(file, table):
         except:
             print('errors are inaccessible')
         print(e.errors)
+    [
+        'Error while reading data, error message: JSON table encountered too many errors, giving up. Rows: 73; errors: 26. Please look into the errors[] collection for more details.',
+        'Error while reading data, error message: JSON processing encountered too many errors, giving up. Rows: 73; errors: 26; max bad: 25; error percent: 0',
+        'Error while reading data, error message: JSON parsing error in row starting at position 0: Array specified for non-repeated field: value.',
+        'Error while reading data, error message: JSON parsing error in row starting at position 272: Array specified for non-repeated field: value.',
+        'Error while reading data, error message: JSON parsing error in row starting at position 533: Array specified for non-repeated field: value.',
+        'Error while reading data, error message: JSON parsing error in row starting at position 812: Array specified for non-repeated field: value.',
+        'Error while reading data, error message: JSON parsing error in row starting at position 1212: Array specified for non-repeated field: value.']
     assert job.job_type == 'load'
     assert job.state == 'DONE'
 
@@ -158,6 +166,7 @@ def process_line_json(line):
             for key, value in parsed[property_value].items():
                 value = 'True' if value is True else value
                 value = 'False' if value is False else value
+                value = str(value) if type(value) == list else value
                 properties.append({'property_type': property_value,
                                    'insert_id': value_def(parsed['$insert_id']),
                                    'key': value_def(key),
