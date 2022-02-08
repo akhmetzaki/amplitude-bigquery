@@ -183,7 +183,7 @@ dataset_ref = bigquery_client.get_dataset('zimranamplitude.amplitude')
 storage_client = storage.Client(credentials=credentials)
 
 
-def main(YESTERDAY=(datetime.utcnow().date() - timedelta(days=3)).strftime("%Y%m%d")):
+def main(YESTERDAY=(datetime.utcnow().date() - timedelta(days=1)).strftime("%Y%m%d")):
     # Perform a CURL request to download the export from Amplitude
     os.system("curl -u " + API_KEY + ":" + API_SECRET + " \
               'https://amplitude.com/api/2/export?start=" + YESTERDAY + "T00&end="
