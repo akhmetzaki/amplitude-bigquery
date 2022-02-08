@@ -2,7 +2,7 @@ from amplitudebq import main
 from datetime import datetime, timedelta
 import zipfile
 START_DATE = datetime.strptime('20211024', '%Y%m%d')
-END_DATE = (datetime.utcnow().date() - timedelta(days=1)).strftime('%Y%m%d')
+END_DATE = datetime.utcnow().date().strftime('%Y%m%d')
 
 
 def historic_parse():

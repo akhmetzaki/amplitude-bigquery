@@ -85,7 +85,7 @@ def value_paying(value):
 
 def load_into_bigquery(file, table):
     job_config = bigquery.LoadJobConfig()
-    job_config.autodetect = True
+    job_config.autodetect = False
     job_config.max_bad_records = 25
     job_config.source_format = 'NEWLINE_DELIMITED_JSON'
     job = bigquery_client.load_table_from_uri(import_json_url(file_json(file)),
@@ -119,8 +119,8 @@ def process_line_json(line):
         data['event_time'] = value_def(parsed['event_time'])
         data['platform'] = value_def(parsed['platform'])
         data['is_attribution_event'] = value_def(parsed['is_attribution_event'])
-        data['os_version'] = value_def(parsed['os_version']) if value_def(parsed['os_version']) is None\
-            else str(value_def(parsed['os_version']))
+        os_version = value_def(parsed['os_version'])
+        data['os_version'] = os_version
         data['paying'] = value_paying(parsed['paying'])
         data['amplitude_id'] = value_def(parsed['amplitude_id'])
         data['device_type'] = value_def(parsed['device_type'])
@@ -166,7 +166,7 @@ dataset_ref = bigquery_client.get_dataset('zimranamplitude.amplitude')
 storage_client = storage.Client(credentials=credentials)
 
 
-def main(YESTERDAY=(datetime.utcnow().date() - timedelta(days=2)).strftime("%Y%m%d")):
+def main(YESTERDAY=(datetime.utcnow().date() - timedelta(days=3)).strftime("%Y%m%d")):
     # Perform a CURL request to download the export from Amplitude
     os.system("curl -u " + API_KEY + ":" + API_SECRET + " \
               'https://amplitude.com/api/2/export?start=" + YESTERDAY + "T00&end="
