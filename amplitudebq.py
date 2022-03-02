@@ -74,12 +74,18 @@ def import_json_url(filename):
     return "gs://" + CLOUD_STORAGE_BUCKET + "/import/" + filename
 
 
-def value_def(value):
+def value_def(jsonDict, key):
+    if key not in jsonDict:
+        return 'null'
+    value = jsonDict[key]
     value = None if value == 'null' else value
     return value
 
 
-def value_paying(value):
+def value_paying(jsonDict, key):
+    if key not in jsonDict:
+        return 'null'
+    value = jsonDict[key]
     value = False if value is None else value
     return value
 
@@ -99,15 +105,6 @@ def load_into_bigquery(file, table):
             print([x['message'] for x in job.errors])
         except:
             print('errors are inaccessible')
-        print(e.errors)
-    [
-        'Error while reading data, error message: JSON table encountered too many errors, giving up. Rows: 73; errors: 26. Please look into the errors[] collection for more details.',
-        'Error while reading data, error message: JSON processing encountered too many errors, giving up. Rows: 73; errors: 26; max bad: 25; error percent: 0',
-        'Error while reading data, error message: JSON parsing error in row starting at position 0: Array specified for non-repeated field: value.',
-        'Error while reading data, error message: JSON parsing error in row starting at position 272: Array specified for non-repeated field: value.',
-        'Error while reading data, error message: JSON parsing error in row starting at position 533: Array specified for non-repeated field: value.',
-        'Error while reading data, error message: JSON parsing error in row starting at position 812: Array specified for non-repeated field: value.',
-        'Error while reading data, error message: JSON parsing error in row starting at position 1212: Array specified for non-repeated field: value.']
     assert job.job_type == 'load'
     assert job.state == 'DONE'
 
@@ -117,49 +114,49 @@ def process_line_json(line):
     if parsed:
         data = {}
         properties = []
-        data['client_event_time'] = value_def(parsed['client_event_time'])
-        data['ip_address'] = value_def(parsed['ip_address'])
-        data['library'] = value_def(parsed['library'])
-        data['dma'] = value_def(parsed['dma'])
-        data['user_creation_time'] = value_def(parsed['user_creation_time'])
-        data['insert_id'] = value_def(parsed['$insert_id'])
-        data['schema'] = value_def(parsed['$schema'])
+        data['client_event_time'] = value_def(parsed, 'client_event_time')
+        data['ip_address'] = value_def(parsed, 'ip_address')
+        data['library'] = value_def(parsed, 'library')
+        data['dma'] = value_def(parsed, 'dma')
+        data['user_creation_time'] = value_def(parsed, 'user_creation_time')
+        data['insert_id'] = value_def(parsed, '$insert_id')
+        data['schema'] = value_def(parsed, '$schema')
         data['processed_time'] = "{d}".format(d=datetime.utcnow())
-        data['client_upload_time'] = value_def(parsed['client_upload_time'])
-        data['app'] = value_def(parsed['app'])
-        data['user_id'] = value_def(parsed['user_id'])
-        data['city'] = value_def(parsed['city'])
-        data['event_type'] = value_def(parsed['event_type'])
-        data['device_carrier'] = value_def(parsed['device_carrier'])
-        data['location_lat'] = value_def(parsed['location_lat'])
-        data['event_time'] = value_def(parsed['event_time'])
-        data['platform'] = value_def(parsed['platform'])
-        data['is_attribution_event'] = value_def(parsed['is_attribution_event'])
-        os_version = value_def(parsed['os_version'])
+        data['client_upload_time'] = value_def(parsed, 'client_upload_time')
+        data['app'] = value_def(parsed, 'app')
+        data['user_id'] = value_def(parsed, 'user_id')
+        data['city'] = value_def(parsed, 'city')
+        data['event_type'] = value_def(parsed, 'event_type')
+        data['device_carrier'] = value_def(parsed, 'device_carrier')
+        data['location_lat'] = value_def(parsed, 'location_lat')
+        data['event_time'] = value_def(parsed, 'event_time')
+        data['platform'] = value_def(parsed, 'platform')
+        data['is_attribution_event'] = value_def(parsed, 'is_attribution_event')
+        os_version = value_def(parsed, 'os_version')
         data['os_version'] = os_version
-        data['paying'] = value_paying(parsed['paying'])
-        data['amplitude_id'] = value_def(parsed['amplitude_id'])
-        data['device_type'] = value_def(parsed['device_type'])
-        data['sample_rate'] = value_def(parsed['sample_rate'])
-        data['device_manufacturer'] = value_def(parsed['device_manufacturer'])
-        data['start_version'] = value_def(parsed['start_version'])
-        data['uuid'] = value_def(parsed['uuid'])
-        data['version_name'] = value_def(parsed['version_name'])
-        data['location_lng'] = value_def(parsed['location_lng'])
-        data['server_upload_time'] = value_def(parsed['server_upload_time'])
-        data['event_id'] = value_def(parsed['event_id'])
-        data['device_id'] = value_def(parsed['device_id'])
-        data['device_family'] = value_def(parsed['device_family'])
-        data['os_name'] = value_def(parsed['os_name'])
-        data['adid'] = value_def(parsed['adid'])
-        data['amplitude_event_type'] = value_def(parsed['amplitude_event_type'])
-        data['device_brand'] = value_def(parsed['device_brand'])
-        data['country'] = value_def(parsed['country'])
-        data['device_model'] = value_def(parsed['device_model'])
-        data['language'] = value_def(parsed['language'])
-        data['region'] = value_def(parsed['region'])
-        data['session_id'] = value_def(parsed['session_id'])
-        data['idfa'] = value_def(parsed['idfa'])
+        data['paying'] = value_paying(parsed, 'paying')
+        data['amplitude_id'] = value_def(parsed, 'amplitude_id')
+        data['device_type'] = value_def(parsed, 'device_type')
+        data['sample_rate'] = value_def(parsed, 'sample_rate')
+        data['device_manufacturer'] = value_def(parsed, 'device_manufacturer')
+        data['start_version'] = value_def(parsed, 'start_version')
+        data['uuid'] = value_def(parsed, 'uuid')
+        data['version_name'] = value_def(parsed, 'version_name')
+        data['location_lng'] = value_def(parsed, 'location_lng')
+        data['server_upload_time'] = value_def(parsed, 'server_upload_time')
+        data['event_id'] = value_def(parsed, 'event_id')
+        data['device_id'] = value_def(parsed, 'device_id')
+        data['device_family'] = value_def(parsed, 'device_family')
+        data['os_name'] = value_def(parsed, 'os_name')
+        data['adid'] = value_def(parsed, 'adid')
+        data['amplitude_event_type'] = value_def(parsed, 'amplitude_event_type')
+        data['device_brand'] = value_def(parsed, 'device_brand')
+        data['country'] = value_def(parsed, 'country')
+        data['device_model'] = value_def(parsed, 'device_model')
+        data['language'] = value_def(parsed, 'language')
+        data['region'] = value_def(parsed, 'region')
+        data['session_id'] = value_def(parsed, 'session_id')
+        data['idfa'] = value_def(parsed, 'idfa')
 
         # Loop through DICTs and save all properties
         for property_value in PROPERTIES:
@@ -168,8 +165,8 @@ def process_line_json(line):
                 value = 'False' if value is False else value
                 value = str(value) if type(value) == list else value
                 properties.append({'property_type': property_value,
-                                   'insert_id': value_def(parsed['$insert_id']),
-                                   'key': value_def(key),
+                                   'insert_id': value_def(parsed, '$insert_id'),
+                                   'key': key,
                                    'value': value})
 
     return json.dumps(data), properties
