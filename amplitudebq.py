@@ -102,9 +102,11 @@ def load_into_bigquery(file, table):
         job.result()
     except BadRequest as e:
         try:
-            print([x['message'] for x in job.errors])
+            print(job.errors)
+            # print([x['message'] for x in job.errors])
         except:
             print('errors are inaccessible')
+        exit(1)
     assert job.job_type == 'load'
     assert job.state == 'DONE'
 
@@ -161,6 +163,8 @@ def process_line_json(line):
         # Loop through DICTs and save all properties
         for property_value in PROPERTIES:
             for key, value in parsed[property_value].items():
+                if type(value) == dict:
+                    continue
                 value = 'True' if value is True else value
                 value = 'False' if value is False else value
                 value = str(value) if type(value) == list else value
